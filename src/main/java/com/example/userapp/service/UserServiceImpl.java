@@ -1,54 +1,66 @@
 package com.example.userapp.service;
 
-
-import com.example.userapp.model.User;
+import com.example.userapp.dto.User;
+import com.example.userapp.model.UserEntity;
 import com.example.userapp.repo.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.userapp.util.ObjectConverter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    @Autowired
-    private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public User register(User user) {
-        // Implement password policy here
-        // For example: check password strength, length, etc.
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+    public User register(User userDto) {
+        log.info("User Registration Service");
+        userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
+        UserEntity userEntity = ObjectConverter.toUser(userDto);
+        UserEntity save = userRepository.save(userEntity);
+        return ObjectConverter.toUserDTO(save);
     }
 
     @Override
+    @Transactional
     public User login(String username, String password) {
-        // Implement login functionality here
-        // Check username and password against database
-        User user = userRepository.findByUsername(username);
+        log.info("User Login request for  {}", username);
+        UserEntity user = userRepository.findByUsername(username);
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-            return user;
+            // enabling the user during first login or if disabled
+            if (!user.isEnabled()) {
+                user.setEnabled(true);
+                userRepository.save(user);
+            }
+            log.info("Valid User: {}", username);
+            return ObjectConverter.toUserDTO(user);
         }
         return null;
     }
 
     @Override
     public User getDetails(String username) {
-        // Implement fetching user details
-        return userRepository.findByUsername(username);
+        log.info("Requesting details for {}", username);
+        UserEntity user = userRepository.findByUsername(username);
+        return ObjectConverter.toUserDTO(user);
     }
 
     @Override
     public User updateDetails(User user) {
-        // Implement updating user details
-        return userRepository.save(user);
+        log.info("Updating {} details", user.getUsername());
+        return ObjectConverter.toUserDTO(userRepository.save(ObjectConverter.toUser(user)));
     }
 
     @Override
     public void deleteUser(Long id) {
-        // Implement deleting user
+        log.info("Deleting {}", id);
         userRepository.deleteById(id);
     }
 }

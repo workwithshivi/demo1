@@ -1,7 +1,7 @@
 package com.example.userapp.service;
 
 
-import com.example.userapp.model.User;
+import com.example.userapp.dto.User;
 
 public interface UserService {
     User register(User user);
