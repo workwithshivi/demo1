@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -18,17 +18,17 @@ public class UserController {
         return userService.register(user);
     }
 
-    @PostMapping("/login")
+    @GetMapping("/login")
     public User login(@RequestParam String username, @RequestParam String password) {
         return userService.login(username, password);
     }
 
-    @GetMapping("/{username}")
+    @GetMapping("/user/{username}")
     public User getDetails(@PathVariable String username) {
         return userService.getDetails(username);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/user/{id}")
     public User updateDetails(@PathVariable Long id, @RequestBody User user) {
         // Ensure user id in URL matches user id in request body
         if (id.equals(user.getId())) {
@@ -37,7 +37,7 @@ public class UserController {
         return null;
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/user/{id}")
     public void deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
     }

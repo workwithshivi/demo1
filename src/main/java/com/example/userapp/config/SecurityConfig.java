@@ -7,7 +7,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.sql.DataSource;
@@ -21,8 +21,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         // Configure authentication
         auth.jdbcAuthentication().dataSource(dataSource)
-                .usersByUsernameQuery("select username,password, enabled from users where username = ?")
-                .authoritiesByUsernameQuery("select username,role from users where username = ?");
+                .usersByUsernameQuery("SELECT username, password, enabled FROM users WHERE username=?")
+                .authoritiesByUsernameQuery("SELECT username, role FROM users WHERE username=?");
     }
 
     @Override
@@ -30,16 +30,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // Configure security policies and CBAC
         http
                 .authorizeRequests()
-                .antMatchers("/api/users/register").permitAll()
-                .antMatchers("/").hasRole("ADMIN")
-                .anyRequest().authenticated()
+                .antMatchers("/api/register").permitAll()
+                .antMatchers("/api/login").permitAll()
+                .antMatchers("/api/user/**").authenticated()
+//                .antMatchers("/**").hasRole("ADMIN")
                 .and()
                 .httpBasic();
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return NoOpPasswordEncoder.getInstance();
     }
 }
 
